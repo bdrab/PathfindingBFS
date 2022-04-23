@@ -9,9 +9,9 @@ def create_maze():
     new_maze.append(["X", " ", "X", " ", " ", " ", " ", "X", "X"])
     new_maze.append(["X", " ", " ", "X", " ", "X", " ", " ", "X"])
     new_maze.append(["X", "X", " ", "X", " ", "X", " ", " ", "X"])
-    new_maze.append(["X", "X", "X", "X", " ", "X", " ", "X", "X"])
+    new_maze.append(["X", "X", " ", "X", " ", "X", " ", "X", "X"])
     new_maze.append(["X", " ", " ", "X", " ", " ", " ", " ", "X"])
-    new_maze.append(["X", "E", "X", "X", "X", "X", "X", "X", "X"])
+    new_maze.append(["X", "F", "X", "X", "X", "X", "X", "X", "X"])
 
     start_x = 0
     start_y = 0
@@ -23,7 +23,7 @@ def create_maze():
             if value2 == "S":
                 start_x = x_cor
                 start_y = y_cor
-            elif value2 == "E":
+            elif value2 == "F":
                 finish_x = x_cor
                 finish_y = y_cor
     return new_maze, start_x, start_y, finish_x, finish_y
