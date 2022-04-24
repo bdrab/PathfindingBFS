@@ -1,4 +1,4 @@
-# Pathfinding_BFS 
+# PathfindingBFS 
 
 Simply implementation of BFS (breadth-first search) algorithm in Python to find the shortest path to exit maze. 
 It finds the path from point "S" to point "F". If there is not a valid path it displays an error in console, otherwise it shows a maze with shortest path marked by "o" characters.
