@@ -1,109 +1,115 @@
 from queue import Queue
+import pygame
+from maze import Maze
+from tkinter import *
+from tkinter import messagebox
+Tk().withdraw()
+
+CELL_SIZE = 30
+WIDTH = CELL_SIZE
+HEIGHT = CELL_SIZE
+MARGIN = 5
+BLACK = (0, 0, 0)
+GREY = (120, 120, 120)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+WHITE = (255, 255, 255)
+board_size = 10
+window_size = [CELL_SIZE*board_size + (board_size+1)*MARGIN, CELL_SIZE*board_size + (board_size+1)*MARGIN]
 
 
-def create_maze():
-    new_maze = []
-    new_maze.append(["X", "X", "X", "X", "X", "X", "X", "X", "X"])
-    new_maze.append(["X", " ", " ", " ", " ", " ", "X", " ", "X"])
-    new_maze.append(["X", " ", "X", " ", " ", "X", " ", " ", "S"])
-    new_maze.append(["X", " ", "X", " ", " ", " ", " ", "X", "X"])
-    new_maze.append(["X", " ", " ", "X", " ", "X", " ", " ", "X"])
-    new_maze.append(["X", "X", " ", "X", " ", "X", " ", " ", "X"])
-    new_maze.append(["X", "X", " ", "X", " ", "X", " ", "X", "X"])
-    new_maze.append(["X", " ", " ", "X", " ", " ", " ", " ", "X"])
-    new_maze.append(["X", "F", "X", "X", "X", "X", "X", "X", "X"])
-
-    start_x = 0
-    start_y = 0
-    finish_x = 0
-    finish_y = 0
-
-    for y_cor, value in enumerate(new_maze):
-        for x_cor, value2 in enumerate(value):
-            if value2 == "S":
-                start_x = x_cor
-                start_y = y_cor
-            elif value2 == "F":
-                finish_x = x_cor
-                finish_y = y_cor
-    return new_maze, start_x, start_y, finish_x, finish_y
+pygame.init()
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode(window_size)
+pygame.display.set_caption("BFS")
 
 
-def check_step(st_x, st_y, step, maze_object):
-    check_x = st_x
-    check_y = st_y
-    position = [(check_x, check_y)]
-    for char in step:
-        if char == "D":
-            check_x = check_x
-            check_y += 1
-        elif char == "U":
-            check_x = check_x
-            check_y -= 1
-        elif char == "R":
-            check_x += 1
-            check_y = check_y
-        elif char == "L":
-            check_x -= 1
-            check_y = check_y
+maze2 = Maze(board_size)
 
-        if (check_x, check_y) in position:
-            return False, None, None
-        else:
-            position.append((check_x, check_y))
-
-    try:
-        value = maze_object[check_y][check_x]
-    except IndexError:
-        return False, None, None
-    if value != "X":
-        return True, check_x, check_y
-    elif value == "X":
-        return False, None, None
-
-
-def print_maze(maze_to_print, way, x, y):
-    check_x = x
-    check_y = y
-    for char in way[:-1]:
-        if char == "D":
-            check_x = check_x
-            check_y += 1
-        elif char == "U":
-            check_x = check_x
-            check_y -= 1
-        elif char == "R":
-            check_x += 1
-            check_y = check_y
-        elif char == "L":
-            check_x -= 1
-            check_y = check_y
-        maze_to_print[check_y][check_x] = "o"
-    print(*maze_to_print, sep="\n")
-
-
-maze, x_start, y_start, x_end, y_end = create_maze()
 
 if __name__ == "__main__":
+    program_end = False
+    set_start_finish = True
 
-    queue = Queue()
-    queue.put("")
-    end_loop = False
+    def find_path():
+        for row in range(board_size):
+            for column in range(board_size):
+                if not (maze2.new_maze[row][column] == "S"
+                        or maze2.new_maze[row][column] == "F"
+                        or maze2.new_maze[row][column] == "X"):
+                    maze2.new_maze[row][column] = " "
+        queue = Queue()
+        queue.put("")
+        end_loop = False
+        while not end_loop:
+            old_path = queue.get()
+            for next_step in ["D", "U", "R", "L"]:
+                current_path = old_path + next_step
+                valid_step, x_current_position, y_current_position = maze2.check_step(current_path)
 
-    while not end_loop:
-        old_path = queue.get()
+                if valid_step:
+                    queue.put(current_path)
 
-        for next_step in ["D", "U", "R", "L"]:
-            current_path = old_path + next_step
-            valid_step, x_current_position, y_current_position = check_step(x_start, y_start, current_path, maze)
+                if x_current_position == maze2.finish_x and y_current_position == maze2.finish_y:
+                    maze2.print_maze(current_path)
+                    end_loop = True
 
-            if valid_step:
-                queue.put(current_path)
-
-            if x_current_position == x_end and y_current_position == y_end:
-                print_maze(maze, current_path, x_start, y_start)
+            if queue.empty():
+                messagebox.showinfo(title="BFS", message="No valid path")
                 end_loop = True
 
-        if queue.empty():
-            print("There is no valid way to exit point.")
-            break
+    while not program_end:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                program_end = True
+                pygame.quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 3:
+                    pos = pygame.mouse.get_pos()
+                    column = pos[0] // (WIDTH + MARGIN)
+                    row = pos[1] // (HEIGHT + MARGIN)
+                    if set_start_finish:
+                        maze2.new_maze[maze2.start_x][maze2.start_y] = " "
+                        maze2.new_maze[row][column] = "S"
+                        maze2.start_x = row
+                        maze2.start_y = column
+                        set_start_finish = not set_start_finish
+
+                    else:
+                        if maze2.start_x != row or maze2.start_y != column:
+                            maze2.new_maze[maze2.finish_x][maze2.finish_y] = " "
+                            maze2.new_maze[row][column] = "F"
+                            maze2.finish_x = row
+                            maze2.finish_y = column
+                            set_start_finish = not set_start_finish
+                            find_path()
+
+                if event.button == 1:
+                    pos = pygame.mouse.get_pos()
+                    column = pos[0] // (WIDTH + MARGIN)
+                    row = pos[1] // (HEIGHT + MARGIN)
+                    if maze2.new_maze[row][column] != "F" and maze2.new_maze[row][column] != "S":
+                        if maze2.new_maze[row][column] == "X":
+                            maze2.new_maze[row][column] = " "
+                        else:
+                            maze2.new_maze[row][column] = "X"
+
+        for row in range(board_size):
+            for column in range(board_size):
+                if maze2.new_maze[row][column] == "X":
+                    pygame.draw.rect(screen, GREY, [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
+
+                elif maze2.new_maze[row][column] == "S":
+                    pygame.draw.rect(screen, RED, [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
+
+                elif maze2.new_maze[row][column] == "F":
+                    pygame.draw.rect(screen, BLUE, [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
+
+                elif maze2.new_maze[row][column] == "o":
+                    pygame.draw.rect(screen, GREEN, [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
+
+                elif maze2.new_maze[row][column] != "X":
+                    pygame.draw.rect(screen, WHITE, [(MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT])
+        clock.tick(60)
+        pygame.display.flip()
